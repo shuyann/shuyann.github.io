@@ -5,85 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>こどもお絵かきアプリ</title>
     <style>
-          body {
-        margin: 0;
-        padding: 0;
-        background-color: #f5f5f5;
-        font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
-    }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+        }
 
-    .container {
-        display: flex;
-        flex-direction: column;
-        height: 80vh; /* 画面全体の高さを基準にする */
-        max-width: 100%;
-    }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 80vh; /* 画面全体の高さを基準にする */
+            max-width: 100%;
+        }
 
-    .header {
-        background-color: #4CAF50;
-        color: white;
-        padding: 5px;
-        text-align: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-shrink: 0; /* ヘッダーの高さを固定 */
-    }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0; /* ヘッダーの高さを固定 */
+        }
 
-    .header h1 {
-        margin: 0;
-        font-size: 18px;
-        padding: 5px 0;
-        flex-grow: 1;
-    }
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            padding: 5px 0;
+            flex-grow: 1;
+        }
 
-    .header-button {
-        background-color: rgba(255,255,255,0.3);
-        border: none;
-        color: white;
-        border-radius: 4px;
-        padding: 4px 8px;
-        margin: 0 4px;
-        font-size: 14px;
-        cursor: pointer;
-    }
-
-    .canvas-container {
-        flex-grow: 1; /* 残りのスペースを可能な限り使う */
-        position: relative;
-        background-color: white;
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-        overflow: hidden; /* 描画領域内はみ出しを隠す（必要に応じて） */
-    }
-
-    #drawingCanvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        cursor: crosshair;
-        touch-action: none;
-    }
-
-    .toolbar {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        padding: 10px;
-        background-color: #f0f0f0;
-        border-top: 1px solid #ddd;
-        flex-shrink: 0; /* ツールバーの高さを固定 */
-    }
-
-        .color-button {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        .header-button {
+            background-color: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin: 0 4px;
+            font-size: 14px;
             cursor: pointer;
+        }
+
+        .canvas-container {
+            flex-grow: 1; /* 残りのスペースを可能な限り使う */
+            position: relative;
+            background-color: white;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            overflow: hidden; /* 描画領域内はみ出しを隠す（必要に応じて） */
+        }
+
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-top: 1px solid #ddd;
+            flex-shrink: 0; /* ツールバーの高さを固定 */
+        }
+
+        #colorPicker {
+            width: 40px; /* サイズ調整 */
+            height: 30px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            -webkit-appearance: none; /* デフォルトスタイルを無効化 */
+            -moz-appearance: none;
+            appearance: none;
+            background-color: white; /* デフォルトの背景色 */
+        }
+
+        #colorPicker::-webkit-color-swatch-wrapper {
+            padding: 0 !important;
+        }
+
+        #colorPicker::-webkit-color-swatch {
+            border: 1px solid #ccc;
+            border-radius: 3px;
         }
 
         .action-button {
@@ -300,11 +312,7 @@
             <canvas id="drawingCanvas"></canvas>
         </div>
         <div class="toolbar">
-            <div class="color-button selected" style="background-color: black;" data-color="black"></div>
-            <div class="color-button" style="background-color: red;" data-color="red"></div>
-            <div class="color-button" style="background-color: blue;" data-color="blue"></div>
-            <div class="color-button" style="background-color: green;" data-color="green"></div>
-            <div class="color-button" style="background-color: yellow;" data-color="yellow"></div>
+            <input type="color" id="colorPicker" value="#000000">
             <div class="eraser-button" id="eraserButton"></div>
             <div class="size-selector">
                 <div class="size-circle" data-size="3">
@@ -344,7 +352,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const canvas = document.getElementById('drawingCanvas');
             const ctx = canvas.getContext('2d');
-            const colorButtons = document.querySelectorAll('.color-button');
+            const colorPicker = document.getElementById('colorPicker');
             const sizeButtons = document.querySelectorAll('.size-circle');
             const clearButton = document.getElementById('clearButton');
             const saveButton = document.getElementById('saveButton');
@@ -357,8 +365,8 @@
             const galleryContainer = document.getElementById('galleryContainer');
             const closeButtons = document.querySelectorAll('.close');
 
-            let currentColor = 'black';
-            let previousColor = 'black'; // 消しゴム使用前の色を保存
+            let currentColor = '#000000'; // 初期色を黒に設定
+            let previousColor = '#000000'; // 消しゴム使用前の色を保存
             let currentSize = 5; // デフォルトのペンサイズ
             let isDrawing = false;
             let lastX = 0;
@@ -451,27 +459,15 @@
                 isDrawing = false;
             }
 
-            // 色の選択
-            colorButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // 消しゴムモードをオフにする
-                    isEraser = false;
-                    eraserButton.classList.remove('selected');
-
-                    // 以前の選択を解除
-                    document.querySelector('.color-button.selected')?.classList.remove('selected');
-                    // 新しい選択を追加
-                    this.classList.add('selected');
-                    currentColor = this.getAttribute('data-color');
-                    previousColor = currentColor; // 前回の色を記憶
-                });
+            // カラーピッカーの色が変更されたときの処理
+            colorPicker.addEventListener('input', function(event) {
+                isEraser = false;
+                eraserButton.classList.remove('selected');
+                currentColor = event.target.value;
             });
 
             // 消しゴムボタン
             eraserButton.addEventListener('click', function() {
-                // 色ボタンの選択を解除
-                document.querySelector('.color-button.selected')?.classList.remove('selected');
-
                 // 消しゴムの選択状態を切り替え
                 if (isEraser) {
                     // 消しゴムモードをオフに
@@ -479,14 +475,15 @@
                     this.classList.remove('selected');
                     // 前回の色に戻す
                     currentColor = previousColor;
-                    // 対応する色ボタンを選択状態に
-                    document.querySelector(`.color-button[data-color="${currentColor}"]`)?.classList.add('selected');
+                    colorPicker.value = previousColor; // カラーピッカーの色も戻す
                 } else {
                     // 消しゴムモードをオンに
                     isEraser = true;
                     this.classList.add('selected');
                     // 現在の色を記憶
-                previousColor = currentColor;
+                    previousColor = currentColor;
+                    currentColor = 'white';
+                    colorPicker.value = 'white'; // カラーピッカーの色も白にする
                 }
             });
 
