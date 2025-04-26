@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>お絵かきホワイトボード</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        .controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .controls button, .controls input[type="range"], .controls select {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button id="resetBtn">リセット</button>
+        <button id="saveBtn">保存</button>
+        <button id="loadBtn">読み込み</button>
+        <button id="deleteBtn">削除</button>
+        <label for="penSize">ペンの太さ:</label>
+        <input type="range" id="penSize" min="1" max="20" value="5">
+        <label for="eraserSize">消しゴムの太さ:</label>
+        <input type="range" id="eraserSize" min="5" max="30" value="10">
+        <button id="eraserBtn">消しゴム</button>
+        <button id="penBtn">ペン</button>
+    </div>
+    <canvas id="whiteboard"></canvas>
+    <script>
+        const canvas = document.getElementById('whiteboard');
+        const ctx = canvas.getContext('2d');
+        const resetBtn = document.getElementById('resetBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const loadBtn = document.getElementById('loadBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const penSizeInput = document.getElementById('penSize');
+        const eraserSizeInput = document.getElementById('eraserSize');
+        const eraserBtn = document.getElementById('eraserBtn');
+        const penBtn = document.getElementById('penBtn');
+
+        let drawing = false;
+        let currentTool = 'pen';
+        let savedDrawings = [];
+        let selectedDrawingIndex = -1;
+
+        // Canvasのサイズをウィンドウサイズに合わせる
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            redrawCanvas();
+        }
+
+        // 保存された絵を再描画する
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (selectedDrawingIndex !== -1 && savedDrawings[selectedDrawingIndex]) {
+                const img = new Image();
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = savedDrawings[selectedDrawingIndex];
+            } else if (savedDrawings.length > 0) {
+                // 最新の保存があれば表示
+                const img = new Image();
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = savedDrawings[savedDrawings.length - 1];
+            }
+        }
+
+        // 描画開始
+        canvas.addEventListener('mousedown', (e) => {
+            drawing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+        });
+
+        // 描画処理
+        canvas.addEventListener('mousemove', (e) => {
+            if (!drawing) return;
+            ctx.lineWidth = currentTool === 'pen' ? penSizeInput.value : eraserSizeInput.value;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            if (currentTool === 'pen') {
+                ctx.strokeStyle = 'black';
+                ctx.globalCompositeOperation = 'source-over';
+            } else if (currentTool === 'eraser') {
+                ctx.strokeStyle = getComputedStyle(canvas).backgroundColor; // 背景色で描画して消す
+                ctx.globalCompositeOperation = 'destination-out'; // より自然な消しゴム
+            }
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(e.clientX, e.clientY);
+            ctx.stroke();
+            startX = e.clientX;
+            startY = e.clientY;
+        });
+
+        // 描画終了
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+        });
+        canvas.addEventListener('mouseout', () => {
+            drawing = false;
+        });
+
+        // リセットボタン
+        resetBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            selectedDrawingIndex = -1;
+        });
+
+        // 保存ボタン
+        saveBtn.addEventListener('click', () => {
+            const imageData = canvas.toDataURL();
+            savedDrawings.push(imageData);
+            selectedDrawingIndex = savedDrawings.length - 1;
+            alert('絵を保存しました！');
+        });
+
+        // 読み込みボタン
+        loadBtn.addEventListener('click', () => {
+            if (savedDrawings.length > 0) {
+                const index = prompt(`読み込む絵の番号を入力してください (0〜${savedDrawings.length - 1})`);
+                const numIndex = parseInt(index);
+                if (!isNaN(numIndex) && numIndex >= 0 && numIndex < savedDrawings.length) {
+                    selectedDrawingIndex = numIndex;
+                    redrawCanvas();
+                    alert(`${numIndex}番の絵を読み込みました。`);
+                } else {
+                    alert('無効な番号です。');
+                }
+            } else {
+                alert('保存された絵はありません。');
+            }
+        });
+
+        // 削除ボタン
+        deleteBtn.addEventListener('click', () => {
+            if (savedDrawings.length > 0) {
+                const index = prompt(`削除する絵の番号を入力してください (0〜${savedDrawings.length - 1})`);
+                const numIndex = parseInt(index);
+                if (!isNaN(numIndex) && numIndex >= 0 && numIndex < savedDrawings.length) {
+                    savedDrawings.splice(numIndex, 1);
+                    selectedDrawingIndex = -1;
+                    redrawCanvas();
+                    alert(`${numIndex}番の絵を削除しました。`);
+                } else {
+                    alert('無効な番号です。');
+                }
+            } else {
+                alert('保存された絵はありません。');
+            }
+        });
+
+        // ペンボタン
+        penBtn.addEventListener('click', () => {
+            currentTool = 'pen';
+        });
+
+        // 消しゴムボタン
+        eraserBtn.addEventListener('click', () => {
+            currentTool = 'eraser';
+        });
+
+        // ウィンドウのリサイズに対応
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); // 初期化時にサイズを調整
+    </script>
+</body>
+</html>
