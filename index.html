@@ -4,18 +4,50 @@
     <title>お絵かきホワイトボード</title>
     <style>
         body { margin: 0; }
-        canvas { display: block; }
+        canvas { display: block; touch-action: none; } /* スクロールを防ぐ */
         .controls {
             position: fixed;
             top: 10px;
             left: 10px;
             z-index: 10;
             background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
         }
-        .controls button, .controls input[type="range"], .controls select {
-            margin-right: 10px;
+        .controls button, .controls input[type="range"], .controls select, .color-picker-container {
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .controls input[type="range"] {
+            width: 120px;
+        }
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+        }
+        .color-picker-container label {
+            margin-right: 5px;
+        }
+        #colorPicker {
+            width: 40px;
+            height: 40px;
+            -webkit-appearance: none;
+            border: none;
+            cursor: pointer;
+        }
+        #colorPicker::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        #colorPicker::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
         }
     </style>
 </head>
@@ -27,10 +59,14 @@
         <button id="deleteBtn">削除</button>
         <label for="penSize">ペンの太さ:</label>
         <input type="range" id="penSize" min="1" max="20" value="5">
-        <label for="eraserSize">消しゴムの太さ:</label>
+        <label for="eraserSize">消しゴム:</label>
         <input type="range" id="eraserSize" min="5" max="30" value="10">
         <button id="eraserBtn">消しゴム</button>
         <button id="penBtn">ペン</button>
+        <div class="color-picker-container">
+            <label for="colorPicker">色:</label>
+            <input type="color" id="colorPicker" value="#000000">
+        </div>
     </div>
     <canvas id="whiteboard"></canvas>
     <script>
@@ -44,11 +80,13 @@
         const eraserSizeInput = document.getElementById('eraserSize');
         const eraserBtn = document.getElementById('eraserBtn');
         const penBtn = document.getElementById('penBtn');
+        const colorPicker = document.getElementById('colorPicker');
 
         let drawing = false;
         let currentTool = 'pen';
         let savedDrawings = [];
         let selectedDrawingIndex = -1;
+        let currentColor = '#000000'; // 初期の色を黒に設定
 
         // Canvasのサイズをウィンドウサイズに合わせる
         function resizeCanvas() {
@@ -76,41 +114,56 @@
             }
         }
 
-        // 描画開始
-        canvas.addEventListener('mousedown', (e) => {
-            drawing = true;
-            startX = e.clientX;
-            startY = e.clientY;
-        });
+        // 描画開始 (マウスとタッチの両方に対応)
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('touchstart', startDrawing);
 
-        // 描画処理
-        canvas.addEventListener('mousemove', (e) => {
+        function startDrawing(e) {
+            drawing = true;
+            startX = e.clientX || e.touches[0].clientX;
+            startY = e.clientY || e.touches[0].clientY;
+            e.preventDefault(); // デフォルトのタッチ操作を防止
+        }
+
+        // 描画処理 (マウスとタッチの両方に対応)
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchmove', draw);
+
+        function draw(e) {
             if (!drawing) return;
+            const currentX = e.clientX || e.touches[0].clientX;
+            const currentY = e.clientY || e.touches[0].clientY;
+
             ctx.lineWidth = currentTool === 'pen' ? penSizeInput.value : eraserSizeInput.value;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
+
             if (currentTool === 'pen') {
-                ctx.strokeStyle = 'black';
+                ctx.strokeStyle = currentColor;
                 ctx.globalCompositeOperation = 'source-over';
             } else if (currentTool === 'eraser') {
-                ctx.strokeStyle = getComputedStyle(canvas).backgroundColor; // 背景色で描画して消す
-                ctx.globalCompositeOperation = 'destination-out'; // より自然な消しゴム
+                ctx.strokeStyle = getComputedStyle(canvas).backgroundColor;
+                ctx.globalCompositeOperation = 'destination-out';
             }
+
             ctx.beginPath();
             ctx.moveTo(startX, startY);
-            ctx.lineTo(e.clientX, e.clientY);
+            ctx.lineTo(currentX, currentY);
             ctx.stroke();
-            startX = e.clientX;
-            startY = e.clientY;
-        });
+            startX = currentX;
+            startY = currentY;
+            e.preventDefault(); // デフォルトのタッチ操作を防止
+        }
 
-        // 描画終了
-        canvas.addEventListener('mouseup', () => {
+        // 描画終了 (マウスとタッチの両方に対応)
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchcancel', stopDrawing);
+
+        function stopDrawing() {
             drawing = false;
-        });
-        canvas.addEventListener('mouseout', () => {
-            drawing = false;
-        });
+        }
 
         // リセットボタン
         resetBtn.addEventListener('click', () => {
@@ -169,6 +222,12 @@
         // 消しゴムボタン
         eraserBtn.addEventListener('click', () => {
             currentTool = 'eraser';
+        });
+
+        // 色選択
+        colorPicker.addEventListener('input', (e) => {
+            currentColor = e.target.value;
+            currentTool = 'pen'; // 色を変えたら自動的にペンツールに戻す
         });
 
         // ウィンドウのリサイズに対応
