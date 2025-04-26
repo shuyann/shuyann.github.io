@@ -1,238 +1,661 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-    <title>お絵かきホワイトボード</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>こどもお絵かきアプリ</title>
     <style>
-        body { margin: 0; }
-        canvas { display: block; touch-action: none; } /* スクロールを防ぐ */
-        .controls {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 10;
-            background-color: #f0f0f0;
-            padding: 15px;
-            border-radius: 10px;
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: none;
+            background-color: #f5f5f5;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+        }
+        
+        .container {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100%;
+        }
+        
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
             align-items: center;
         }
-        .controls button, .controls input[type="range"], .controls select, .color-picker-container {
-            padding: 10px 15px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
+        
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            padding: 5px 0;
+            flex-grow: 1;
         }
-        .controls input[type="range"] {
-            width: 120px;
-        }
-        .color-picker-container {
-            display: flex;
-            align-items: center;
-        }
-        .color-picker-container label {
-            margin-right: 5px;
-        }
-        #colorPicker {
-            width: 40px;
-            height: 40px;
-            -webkit-appearance: none;
+        
+        .header-button {
+            background-color: rgba(255,255,255,0.3);
             border: none;
+            color: white;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin: 0 4px;
+            font-size: 14px;
             cursor: pointer;
         }
-        #colorPicker::-webkit-color-swatch-wrapper {
-            padding: 0;
+        
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background-color: white;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
         }
-        #colorPicker::-webkit-color-swatch {
-            border: none;
+        
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-top: 1px solid #ddd;
+        }
+        
+        .color-button {
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        
+        .action-button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        
+        .action-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .selected {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.8), 0 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        .size-selector {
+            display: flex;
+            align-items: center;
+            margin: 0 5px;
+        }
+        
+        .size-circle {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .size-dot {
+            background-color: black;
+            border-radius: 50%;
+        }
+        
+        .size-dot.small {
+            width: 3px;
+            height: 3px;
+        }
+        
+        .size-dot.medium {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .size-dot.large {
+            width: 10px;
+            height: 10px;
+        }
+        
+        .size-circle.selected {
+            background-color: #e0e0e0;
+            border-radius: 50%;
+        }
+        
+        /* 消しゴムボタンのスタイル */
+        .eraser-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            background-color: #f8f8f8;
+            border: 2px solid #ddd;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .eraser-button::before {
+            content: "";
+            width: 18px;
+            height: 12px;
+            background-color: #eaeaea;
+            transform: rotate(-45deg);
+            border: 1px solid #ccc;
+        }
+        
+        /* モーダルスタイル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .gallery-item {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .gallery-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: space-around;
+            padding: 5px;
+        }
+        
+        .gallery-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 3px 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .delete-button {
+            background-color: #f44336;
+        }
+        
+        .empty-gallery {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .drawing-name-input {
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        @media (orientation: landscape) {
+            .container {
+                flex-direction: row;
+            }
+            
+            .toolbar {
+                flex-direction: column;
+                border-top: none;
+                border-left: 1px solid #ddd;
+            }
+            
+            .size-selector {
+                flex-direction: column;
+                margin: 10px 0;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="controls">
-        <button id="resetBtn">リセット</button>
-        <button id="saveBtn">保存</button>
-        <button id="loadBtn">読み込み</button>
-        <button id="deleteBtn">削除</button>
-        <label for="penSize">ペンの太さ:</label>
-        <input type="range" id="penSize" min="1" max="20" value="5">
-        <label for="eraserSize">消しゴム:</label>
-        <input type="range" id="eraserSize" min="5" max="30" value="10">
-        <button id="eraserBtn">消しゴム</button>
-        <button id="penBtn">ペン</button>
-        <div class="color-picker-container">
-            <label for="colorPicker">色:</label>
-            <input type="color" id="colorPicker" value="#000000">
+    <div class="container">
+        <div class="header">
+            <h1>おえかきボード</h1>
+            <button class="header-button" id="galleryButton">絵をみる</button>
+            <button class="header-button" id="saveButton">ほぞん</button>
+        </div>
+        <div class="canvas-container">
+            <canvas id="drawingCanvas"></canvas>
+        </div>
+        <div class="toolbar">
+            <div class="color-button selected" style="background-color: black;" data-color="black"></div>
+            <div class="color-button" style="background-color: red;" data-color="red"></div>
+            <div class="color-button" style="background-color: blue;" data-color="blue"></div>
+            <div class="color-button" style="background-color: green;" data-color="green"></div>
+            <div class="color-button" style="background-color: yellow;" data-color="yellow"></div>
+            
+            <!-- 消しゴムボタン -->
+            <div class="eraser-button" id="eraserButton"></div>
+            
+            <div class="size-selector">
+                <div class="size-circle" data-size="3">
+                    <div class="size-dot small"></div>
+                </div>
+                <div class="size-circle selected" data-size="5">
+                    <div class="size-dot medium"></div>
+                </div>
+                <div class="size-circle" data-size="10">
+                    <div class="size-dot large"></div>
+                </div>
+            </div>
+            
+            <button class="action-button" id="clearButton">けす</button>
         </div>
     </div>
-    <canvas id="whiteboard"></canvas>
+    
+    <!-- 保存モーダル -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>絵をほぞんする</h2>
+            <p>絵の名前をつけてください：</p>
+            <input type="text" class="drawing-name-input" id="drawingName" placeholder="例：おうち">
+            <button class="action-button" id="confirmSaveButton" style="margin-top: 10px; width: 100%;">ほぞんする</button>
+        </div>
+    </div>
+    
+    <!-- ギャラリーモーダル -->
+    <div id="galleryModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>ほぞんした絵</h2>
+            <div class="gallery" id="galleryContainer">
+                <!-- ここにほぞんした絵が表示されます -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        const canvas = document.getElementById('whiteboard');
-        const ctx = canvas.getContext('2d');
-        const resetBtn = document.getElementById('resetBtn');
-        const saveBtn = document.getElementById('saveBtn');
-        const loadBtn = document.getElementById('loadBtn');
-        const deleteBtn = document.getElementById('deleteBtn');
-        const penSizeInput = document.getElementById('penSize');
-        const eraserSizeInput = document.getElementById('eraserSize');
-        const eraserBtn = document.getElementById('eraserBtn');
-        const penBtn = document.getElementById('penBtn');
-        const colorPicker = document.getElementById('colorPicker');
-
-        let drawing = false;
-        let currentTool = 'pen';
-        let savedDrawings = [];
-        let selectedDrawingIndex = -1;
-        let currentColor = '#000000'; // 初期の色を黒に設定
-
-        // Canvasのサイズをウィンドウサイズに合わせる
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            redrawCanvas();
-        }
-
-        // 保存された絵を再描画する
-        function redrawCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (selectedDrawingIndex !== -1 && savedDrawings[selectedDrawingIndex]) {
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('drawingCanvas');
+            const ctx = canvas.getContext('2d');
+            const colorButtons = document.querySelectorAll('.color-button');
+            const sizeButtons = document.querySelectorAll('.size-circle');
+            const clearButton = document.getElementById('clearButton');
+            const saveButton = document.getElementById('saveButton');
+            const galleryButton = document.getElementById('galleryButton');
+            const eraserButton = document.getElementById('eraserButton');
+            const saveModal = document.getElementById('saveModal');
+            const galleryModal = document.getElementById('galleryModal');
+            const confirmSaveButton = document.getElementById('confirmSaveButton');
+            const drawingNameInput = document.getElementById('drawingName');
+            const galleryContainer = document.getElementById('galleryContainer');
+            const closeButtons = document.querySelectorAll('.close');
+            
+            let currentColor = 'black';
+            let previousColor = 'black'; // 消しゴム使用前の色を保存
+            let currentSize = 5; // デフォルトのペンサイズ
+            let isDrawing = false;
+            let lastX = 0;
+            let lastY = 0;
+            let isEraser = false; // 消しゴムモードのフラグ
+            
+            // メモリ内にデータを保存するための配列
+            let savedDrawings = [];
+            
+            // キャンバスのサイズを設定
+            function resizeCanvas() {
+                const container = canvas.parentElement;
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                
+                // 背景を白に設定
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // 初期化時とウィンドウリサイズ時にキャンバスサイズを調整
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 描画関数
+            function draw(e) {
+                if (!isDrawing) return;
+                
+                // タッチイベントかマウスイベントかを判断
+                let clientX, clientY;
+                if (e.touches && e.touches[0]) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                // キャンバス上の座標に変換
+                const rect = canvas.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+                
+                // 消しゴムモードの場合は白色で描画
+                ctx.strokeStyle = isEraser ? 'white' : currentColor;
+                ctx.lineWidth = currentSize;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                lastX = x;
+                lastY = y;
+            }
+            
+            // マウスイベント
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            // タッチイベント
+            canvas.addEventListener('touchstart', startDrawing);
+            canvas.addEventListener('touchmove', draw);
+            canvas.addEventListener('touchend', stopDrawing);
+            
+            function startDrawing(e) {
+                e.preventDefault(); // スクロールを防止
+                isDrawing = true;
+                
+                // タッチイベントかマウスイベントかを判断
+                let clientX, clientY;
+                if (e.touches && e.touches[0]) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                // キャンバス上の座標に変換
+                const rect = canvas.getBoundingClientRect();
+                lastX = clientX - rect.left;
+                lastY = clientY - rect.top;
+            }
+            
+            function stopDrawing() {
+                isDrawing = false;
+            }
+            
+            // 色の選択
+            colorButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 消しゴムモードをオフにする
+                    isEraser = false;
+                    eraserButton.classList.remove('selected');
+                    
+                    // 以前の選択を解除
+                    document.querySelector('.color-button.selected')?.classList.remove('selected');
+                    // 新しい選択を追加
+                    this.classList.add('selected');
+                    currentColor = this.getAttribute('data-color');
+                    previousColor = currentColor; // 前回の色を記憶
+                });
+            });
+            
+            // 消しゴムボタン
+            eraserButton.addEventListener('click', function() {
+                // 色ボタンの選択を解除
+                document.querySelector('.color-button.selected')?.classList.remove('selected');
+                
+                // 消しゴムの選択状態を切り替え
+                if (isEraser) {
+                    // 消しゴムモードをオフに
+                    isEraser = false;
+                    this.classList.remove('selected');
+                    // 前回の色に戻す
+                    currentColor = previousColor;
+                    // 対応する色ボタンを選択状態に
+                    document.querySelector(`.color-button[data-color="${currentColor}"]`)?.classList.add('selected');
+                } else {
+                    // 消しゴムモードをオンに
+                    isEraser = true;
+                    this.classList.add('selected');
+                    // 現在の色を記憶
+                    previousColor = currentColor;
+                }
+            });
+            
+            // ペンサイズの選択
+            sizeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 以前の選択を解除
+                    document.querySelector('.size-circle.selected')?.classList.remove('selected');
+                    // 新しい選択を追加
+                    this.classList.add('selected');
+                    currentSize = parseInt(this.getAttribute('data-size'));
+                });
+            });
+            
+            // クリアボタン
+            clearButton.addEventListener('click', function() {
+                if (confirm('絵をぜんぶけしますか？')) {
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            });
+            
+            // 保存ボタン
+            saveButton.addEventListener('click', function() {
+                saveModal.style.display = 'block';
+                drawingNameInput.value = ''; // 入力フィールドをクリア
+                drawingNameInput.focus();
+            });
+            
+            // 保存確認ボタン
+            confirmSaveButton.addEventListener('click', function() {
+                const name = drawingNameInput.value.trim() || '無題の絵_' + Date.now();
+                const dataURL = canvas.toDataURL('image/png');
+                
+                // 保存配列に追加
+                savedDrawings.push({
+                    id: Date.now(),
+                    name: name,
+                    dataURL: dataURL,
+                    date: new Date().toLocaleString()
+                });
+                
+                // モーダルを閉じる
+                saveModal.style.display = 'none';
+                
+                // 保存完了メッセージ
+                alert(`「${name}」を保存しました！`);
+            });
+            
+            // ギャラリーボタン
+            galleryButton.addEventListener('click', function() {
+                updateGallery();
+                galleryModal.style.display = 'block';
+            });
+            
+            // ギャラリーを更新
+            function updateGallery() {
+                // ギャラリーをクリア
+                galleryContainer.innerHTML = '';
+                
+                if (savedDrawings.length === 0) {
+                    galleryContainer.innerHTML = '<div class="empty-gallery">まだほぞんした絵はありません</div>';
+                    return;
+                }
+                
+                // 保存した絵を表示
+                savedDrawings.forEach(drawing => {
+                    const item = document.createElement('div');
+                    item.className = 'gallery-item';
+                    
+                    const img = document.createElement('img');
+                    img.className = 'gallery-image';
+                    img.src = drawing.dataURL;
+                    img.alt = drawing.name;
+                    item.appendChild(img);
+                    
+                    const title = document.createElement('div');
+                    title.style.padding = '5px';
+                    title.style.backgroundColor = '#f0f0f0';
+                    title.style.fontSize = '12px';
+                    title.textContent = drawing.name;
+                    item.appendChild(title);
+                    
+                    const actions = document.createElement('div');
+                    actions.className = 'gallery-actions';
+                    
+                    const viewBtn = document.createElement('button');
+                    viewBtn.className = 'gallery-button';
+                    viewBtn.textContent = 'みる';
+                    viewBtn.addEventListener('click', () => {
+                        loadDrawing(drawing.dataURL);
+                        galleryModal.style.display = 'none';
+                    });
+                    actions.appendChild(viewBtn);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'gallery-button delete-button';
+                    deleteBtn.textContent = 'さくじょ';
+                    deleteBtn.addEventListener('click', () => {
+                        if (confirm(`「${drawing.name}」をさくじょしますか？`)) {
+                            deleteDrawing(drawing.id);
+                            updateGallery();
+                        }
+                    });
+                    actions.appendChild(deleteBtn);
+                    
+                    item.appendChild(actions);
+                    galleryContainer.appendChild(item);
+                });
+            }
+            
+            // 絵を読み込む
+            function loadDrawing(dataURL) {
                 const img = new Image();
                 img.onload = function() {
-                    ctx.drawImage(img, 0, 0);
+                    // キャンバスをクリア
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // 画像を中央に配置
+                    const scale = Math.min(
+                        canvas.width / img.width,
+                        canvas.height / img.height
+                    );
+                    
+                    const x = (canvas.width - img.width * scale) / 2;
+                    const y = (canvas.height - img.height * scale) / 2;
+                    
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
                 };
-                img.src = savedDrawings[selectedDrawingIndex];
-            } else if (savedDrawings.length > 0) {
-                // 最新の保存があれば表示
-                const img = new Image();
-                img.onload = function() {
-                    ctx.drawImage(img, 0, 0);
-                };
-                img.src = savedDrawings[savedDrawings.length - 1];
+                img.src = dataURL;
             }
-        }
-
-        // 描画開始 (マウスとタッチの両方に対応)
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('touchstart', startDrawing);
-
-        function startDrawing(e) {
-            drawing = true;
-            startX = e.clientX || e.touches[0].clientX;
-            startY = e.clientY || e.touches[0].clientY;
-            e.preventDefault(); // デフォルトのタッチ操作を防止
-        }
-
-        // 描画処理 (マウスとタッチの両方に対応)
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('touchmove', draw);
-
-        function draw(e) {
-            if (!drawing) return;
-            const currentX = e.clientX || e.touches[0].clientX;
-            const currentY = e.clientY || e.touches[0].clientY;
-
-            ctx.lineWidth = currentTool === 'pen' ? penSizeInput.value : eraserSizeInput.value;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            if (currentTool === 'pen') {
-                ctx.strokeStyle = currentColor;
-                ctx.globalCompositeOperation = 'source-over';
-            } else if (currentTool === 'eraser') {
-                ctx.strokeStyle = getComputedStyle(canvas).backgroundColor;
-                ctx.globalCompositeOperation = 'destination-out';
+            
+            // 絵を削除
+            function deleteDrawing(id) {
+                savedDrawings = savedDrawings.filter(drawing => drawing.id !== id);
             }
-
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(currentX, currentY);
-            ctx.stroke();
-            startX = currentX;
-            startY = currentY;
-            e.preventDefault(); // デフォルトのタッチ操作を防止
-        }
-
-        // 描画終了 (マウスとタッチの両方に対応)
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-        canvas.addEventListener('touchend', stopDrawing);
-        canvas.addEventListener('touchcancel', stopDrawing);
-
-        function stopDrawing() {
-            drawing = false;
-        }
-
-        // リセットボタン
-        resetBtn.addEventListener('click', () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            selectedDrawingIndex = -1;
-        });
-
-        // 保存ボタン
-        saveBtn.addEventListener('click', () => {
-            const imageData = canvas.toDataURL();
-            savedDrawings.push(imageData);
-            selectedDrawingIndex = savedDrawings.length - 1;
-            alert('絵を保存しました！');
-        });
-
-        // 読み込みボタン
-        loadBtn.addEventListener('click', () => {
-            if (savedDrawings.length > 0) {
-                const index = prompt(`読み込む絵の番号を入力してください (0〜${savedDrawings.length - 1})`);
-                const numIndex = parseInt(index);
-                if (!isNaN(numIndex) && numIndex >= 0 && numIndex < savedDrawings.length) {
-                    selectedDrawingIndex = numIndex;
-                    redrawCanvas();
-                    alert(`${numIndex}番の絵を読み込みました。`);
-                } else {
-                    alert('無効な番号です。');
+            
+            // モーダルを閉じる
+            closeButtons.forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    saveModal.style.display = 'none';
+                    galleryModal.style.display = 'none';
+                });
+            });
+            
+            // モーダル外をクリックしたら閉じる
+            window.addEventListener('click', function(e) {
+                if (e.target === saveModal) {
+                    saveModal.style.display = 'none';
                 }
-            } else {
-                alert('保存された絵はありません。');
-            }
-        });
-
-        // 削除ボタン
-        deleteBtn.addEventListener('click', () => {
-            if (savedDrawings.length > 0) {
-                const index = prompt(`削除する絵の番号を入力してください (0〜${savedDrawings.length - 1})`);
-                const numIndex = parseInt(index);
-                if (!isNaN(numIndex) && numIndex >= 0 && numIndex < savedDrawings.length) {
-                    savedDrawings.splice(numIndex, 1);
-                    selectedDrawingIndex = -1;
-                    redrawCanvas();
-                    alert(`${numIndex}番の絵を削除しました。`);
-                } else {
-                    alert('無効な番号です。');
+                if (e.target === galleryModal) {
+                    galleryModal.style.display = 'none';
                 }
-            } else {
-                alert('保存された絵はありません。');
-            }
+            });
+            
+            // Enterキーで保存
+            drawingNameInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    confirmSaveButton.click();
+                }
+            });
         });
-
-        // ペンボタン
-        penBtn.addEventListener('click', () => {
-            currentTool = 'pen';
-        });
-
-        // 消しゴムボタン
-        eraserBtn.addEventListener('click', () => {
-            currentTool = 'eraser';
-        });
-
-        // 色選択
-        colorPicker.addEventListener('input', (e) => {
-            currentColor = e.target.value;
-            currentTool = 'pen'; // 色を変えたら自動的にペンツールに戻す
-        });
-
-        // ウィンドウのリサイズに対応
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas(); // 初期化時にサイズを調整
     </script>
 </body>
 </html>
