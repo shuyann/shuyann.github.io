@@ -8,19 +8,19 @@
         body {
             margin: 0;
             padding: 0;
-            overflow: hidden;
-            touch-action: none;
             background-color: #f5f5f5;
             font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            /* overflow: hidden; ← 削除またはコメントアウト */
         }
-        
+
         .container {
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            height: 100vh; /* 画面全体を覆う */
             max-width: 100%;
+            overflow-y: auto; /* 必要に応じて縦スクロール */
         }
-        
+
         .header {
             background-color: #4CAF50;
             color: white;
@@ -31,14 +31,14 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .header h1 {
             margin: 0;
             font-size: 18px;
             padding: 5px 0;
             flex-grow: 1;
         }
-        
+
         .header-button {
             background-color: rgba(255,255,255,0.3);
             border: none;
@@ -49,14 +49,14 @@
             font-size: 14px;
             cursor: pointer;
         }
-        
+
         .canvas-container {
-            flex: 1;
+            flex-grow: 1; /* 残りのスペースを埋める */
             position: relative;
             background-color: white;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
         }
-        
+
         #drawingCanvas {
             position: absolute;
             top: 0;
@@ -64,8 +64,9 @@
             width: 100%;
             height: 100%;
             cursor: crosshair;
+            touch-action: none; /* デフォルトのタッチ操作を無効化（描画優先） */
         }
-        
+
         .toolbar {
             display: flex;
             justify-content: space-around;
@@ -74,7 +75,7 @@
             background-color: #f0f0f0;
             border-top: 1px solid #ddd;
         }
-        
+
         .color-button {
             width: 30px;
             height: 30px;
@@ -83,7 +84,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
             cursor: pointer;
         }
-        
+
         .action-button {
             padding: 8px 16px;
             background-color: #4CAF50;
@@ -95,12 +96,12 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: all 0.2s;
         }
-        
+
         .action-button:active {
             transform: scale(0.95);
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        
+
         .selected {
             transform: scale(1.2);
             box-shadow: 0 0 0 3px rgba(255,255,255,0.8), 0 0 0 5px rgba(0,0,0,0.1);
@@ -111,7 +112,7 @@
             align-items: center;
             margin: 0 5px;
         }
-        
+
         .size-circle {
             width: 24px;
             height: 24px;
@@ -120,32 +121,32 @@
             align-items: center;
             cursor: pointer;
         }
-        
+
         .size-dot {
             background-color: black;
             border-radius: 50%;
         }
-        
+
         .size-dot.small {
             width: 3px;
             height: 3px;
         }
-        
+
         .size-dot.medium {
             width: 6px;
             height: 6px;
         }
-        
+
         .size-dot.large {
             width: 10px;
             height: 10px;
         }
-        
+
         .size-circle.selected {
             background-color: #e0e0e0;
             border-radius: 50%;
         }
-        
+
         /* 消しゴムボタンのスタイル */
         .eraser-button {
             width: 30px;
@@ -160,7 +161,7 @@
             align-items: center;
             position: relative;
         }
-        
+
         .eraser-button::before {
             content: "";
             width: 18px;
@@ -169,7 +170,7 @@
             transform: rotate(-45deg);
             border: 1px solid #ccc;
         }
-        
+
         /* モーダルスタイル */
         .modal {
             display: none;
@@ -182,7 +183,7 @@
             z-index: 1000;
             overflow-y: auto;
         }
-        
+
         .modal-content {
             background-color: white;
             margin: 10% auto;
@@ -192,7 +193,7 @@
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-        
+
         .close {
             color: #aaa;
             float: right;
@@ -200,31 +201,31 @@
             font-weight: bold;
             cursor: pointer;
         }
-        
+
         .close:hover {
             color: black;
         }
-        
+
         .gallery {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             margin-top: 20px;
         }
-        
+
         .gallery-item {
             position: relative;
             border: 1px solid #ddd;
             border-radius: 5px;
             overflow: hidden;
         }
-        
+
         .gallery-image {
             width: 100%;
             height: auto;
             display: block;
         }
-        
+
         .gallery-actions {
             position: absolute;
             bottom: 0;
@@ -235,7 +236,7 @@
             justify-content: space-around;
             padding: 5px;
         }
-        
+
         .gallery-button {
             background-color: #4CAF50;
             color: white;
@@ -245,11 +246,11 @@
             font-size: 12px;
             cursor: pointer;
         }
-        
+
         .delete-button {
             background-color: #f44336;
         }
-        
+
         .empty-gallery {
             text-align: center;
             padding: 20px;
@@ -269,18 +270,18 @@
             .container {
                 flex-direction: row;
             }
-            
+
             .toolbar {
                 flex-direction: column;
                 border-top: none;
                 border-left: 1px solid #ddd;
             }
-            
+
             .size-selector {
                 flex-direction: column;
                 margin: 10px 0;
             }
-            
+
             .gallery {
                 grid-template-columns: repeat(3, 1fr);
             }
@@ -303,10 +304,7 @@
             <div class="color-button" style="background-color: blue;" data-color="blue"></div>
             <div class="color-button" style="background-color: green;" data-color="green"></div>
             <div class="color-button" style="background-color: yellow;" data-color="yellow"></div>
-            
-            <!-- 消しゴムボタン -->
             <div class="eraser-button" id="eraserButton"></div>
-            
             <div class="size-selector">
                 <div class="size-circle" data-size="3">
                     <div class="size-dot small"></div>
@@ -318,12 +316,10 @@
                     <div class="size-dot large"></div>
                 </div>
             </div>
-            
             <button class="action-button" id="clearButton">けす</button>
         </div>
     </div>
-    
-    <!-- 保存モーダル -->
+
     <div id="saveModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -333,15 +329,13 @@
             <button class="action-button" id="confirmSaveButton" style="margin-top: 10px; width: 100%;">ほぞんする</button>
         </div>
     </div>
-    
-    <!-- ギャラリーモーダル -->
+
     <div id="galleryModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>ほぞんした絵</h2>
             <div class="gallery" id="galleryContainer">
-                <!-- ここにほぞんした絵が表示されます -->
-            </div>
+                </div>
         </div>
     </div>
 
@@ -361,7 +355,7 @@
             const drawingNameInput = document.getElementById('drawingName');
             const galleryContainer = document.getElementById('galleryContainer');
             const closeButtons = document.querySelectorAll('.close');
-            
+
             let currentColor = 'black';
             let previousColor = 'black'; // 消しゴム使用前の色を保存
             let currentSize = 5; // デフォルトのペンサイズ
@@ -369,29 +363,29 @@
             let lastX = 0;
             let lastY = 0;
             let isEraser = false; // 消しゴムモードのフラグ
-            
+
             // メモリ内にデータを保存するための配列
             let savedDrawings = [];
-            
+
             // キャンバスのサイズを設定
             function resizeCanvas() {
                 const container = canvas.parentElement;
                 canvas.width = container.clientWidth;
                 canvas.height = container.clientHeight;
-                
+
                 // 背景を白に設定
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
-            
+
             // 初期化時とウィンドウリサイズ時にキャンバスサイズを調整
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
-            
+
             // 描画関数
             function draw(e) {
                 if (!isDrawing) return;
-                
+
                 // タッチイベントかマウスイベントかを判断
                 let clientX, clientY;
                 if (e.touches && e.touches[0]) {
@@ -401,42 +395,41 @@
                     clientX = e.clientX;
                     clientY = e.clientY;
                 }
-                
+
                 // キャンバス上の座標に変換
                 const rect = canvas.getBoundingClientRect();
                 const x = clientX - rect.left;
                 const y = clientY - rect.top;
-                
-                // 消しゴムモードの場合は白色で描画
+
                 ctx.strokeStyle = isEraser ? 'white' : currentColor;
                 ctx.lineWidth = currentSize;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
-                
+
                 ctx.beginPath();
                 ctx.moveTo(lastX, lastY);
                 ctx.lineTo(x, y);
                 ctx.stroke();
-                
+
                 lastX = x;
                 lastY = y;
             }
-            
+
             // マウスイベント
             canvas.addEventListener('mousedown', startDrawing);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', stopDrawing);
             canvas.addEventListener('mouseout', stopDrawing);
-            
+
             // タッチイベント
             canvas.addEventListener('touchstart', startDrawing);
             canvas.addEventListener('touchmove', draw);
             canvas.addEventListener('touchend', stopDrawing);
-            
+
             function startDrawing(e) {
                 e.preventDefault(); // スクロールを防止
                 isDrawing = true;
-                
+
                 // タッチイベントかマウスイベントかを判断
                 let clientX, clientY;
                 if (e.touches && e.touches[0]) {
@@ -446,24 +439,24 @@
                     clientX = e.clientX;
                     clientY = e.clientY;
                 }
-                
+
                 // キャンバス上の座標に変換
                 const rect = canvas.getBoundingClientRect();
                 lastX = clientX - rect.left;
                 lastY = clientY - rect.top;
             }
-            
+
             function stopDrawing() {
                 isDrawing = false;
             }
-            
+
             // 色の選択
             colorButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     // 消しゴムモードをオフにする
                     isEraser = false;
                     eraserButton.classList.remove('selected');
-                    
+
                     // 以前の選択を解除
                     document.querySelector('.color-button.selected')?.classList.remove('selected');
                     // 新しい選択を追加
@@ -472,12 +465,12 @@
                     previousColor = currentColor; // 前回の色を記憶
                 });
             });
-            
+
             // 消しゴムボタン
             eraserButton.addEventListener('click', function() {
                 // 色ボタンの選択を解除
                 document.querySelector('.color-button.selected')?.classList.remove('selected');
-                
+
                 // 消しゴムの選択状態を切り替え
                 if (isEraser) {
                     // 消しゴムモードをオフに
@@ -492,10 +485,10 @@
                     isEraser = true;
                     this.classList.add('selected');
                     // 現在の色を記憶
-                    previousColor = currentColor;
+                previousColor = currentColor;
                 }
             });
-            
+
             // ペンサイズの選択
             sizeButtons.forEach(button => {
                 button.addEventListener('click', function() {
@@ -506,7 +499,7 @@
                     currentSize = parseInt(this.getAttribute('data-size'));
                 });
             });
-            
+
             // クリアボタン
             clearButton.addEventListener('click', function() {
                 if (confirm('絵をぜんぶけしますか？')) {
@@ -514,19 +507,19 @@
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
             });
-            
+
             // 保存ボタン
             saveButton.addEventListener('click', function() {
                 saveModal.style.display = 'block';
                 drawingNameInput.value = ''; // 入力フィールドをクリア
                 drawingNameInput.focus();
             });
-            
+
             // 保存確認ボタン
             confirmSaveButton.addEventListener('click', function() {
                 const name = drawingNameInput.value.trim() || '無題の絵_' + Date.now();
                 const dataURL = canvas.toDataURL('image/png');
-                
+
                 // 保存配列に追加
                 savedDrawings.push({
                     id: Date.now(),
@@ -534,51 +527,51 @@
                     dataURL: dataURL,
                     date: new Date().toLocaleString()
                 });
-                
+
                 // モーダルを閉じる
                 saveModal.style.display = 'none';
-                
+
                 // 保存完了メッセージ
                 alert(`「${name}」を保存しました！`);
             });
-            
+
             // ギャラリーボタン
             galleryButton.addEventListener('click', function() {
                 updateGallery();
                 galleryModal.style.display = 'block';
             });
-            
+
             // ギャラリーを更新
             function updateGallery() {
                 // ギャラリーをクリア
                 galleryContainer.innerHTML = '';
-                
+
                 if (savedDrawings.length === 0) {
                     galleryContainer.innerHTML = '<div class="empty-gallery">まだほぞんした絵はありません</div>';
                     return;
                 }
-                
+
                 // 保存した絵を表示
                 savedDrawings.forEach(drawing => {
                     const item = document.createElement('div');
                     item.className = 'gallery-item';
-                    
+
                     const img = document.createElement('img');
                     img.className = 'gallery-image';
                     img.src = drawing.dataURL;
                     img.alt = drawing.name;
                     item.appendChild(img);
-                    
+
                     const title = document.createElement('div');
                     title.style.padding = '5px';
                     title.style.backgroundColor = '#f0f0f0';
                     title.style.fontSize = '12px';
                     title.textContent = drawing.name;
                     item.appendChild(title);
-                    
+
                     const actions = document.createElement('div');
                     actions.className = 'gallery-actions';
-                    
+
                     const viewBtn = document.createElement('button');
                     viewBtn.className = 'gallery-button';
                     viewBtn.textContent = 'みる';
@@ -587,7 +580,7 @@
                         galleryModal.style.display = 'none';
                     });
                     actions.appendChild(viewBtn);
-                    
+
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'gallery-button delete-button';
                     deleteBtn.textContent = 'さくじょ';
@@ -598,12 +591,12 @@
                         }
                     });
                     actions.appendChild(deleteBtn);
-                    
+
                     item.appendChild(actions);
                     galleryContainer.appendChild(item);
                 });
             }
-            
+
             // 絵を読み込む
             function loadDrawing(dataURL) {
                 const img = new Image();
@@ -611,26 +604,26 @@
                     // キャンバスをクリア
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    
+
                     // 画像を中央に配置
                     const scale = Math.min(
                         canvas.width / img.width,
                         canvas.height / img.height
                     );
-                    
+
                     const x = (canvas.width - img.width * scale) / 2;
                     const y = (canvas.height - img.height * scale) / 2;
-                    
+
                     ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
                 };
                 img.src = dataURL;
             }
-            
+
             // 絵を削除
             function deleteDrawing(id) {
                 savedDrawings = savedDrawings.filter(drawing => drawing.id !== id);
             }
-            
+
             // モーダルを閉じる
             closeButtons.forEach(closeBtn => {
                 closeBtn.addEventListener('click', function() {
@@ -638,7 +631,7 @@
                     galleryModal.style.display = 'none';
                 });
             });
-            
+
             // モーダル外をクリックしたら閉じる
             window.addEventListener('click', function(e) {
                 if (e.target === saveModal) {
@@ -648,7 +641,7 @@
                     galleryModal.style.display = 'none';
                 }
             });
-            
+
             // Enterキーで保存
             drawingNameInput.addEventListener('keyup', function(e) {
                 if (e.key === 'Enter') {
