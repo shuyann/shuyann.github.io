@@ -5,76 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>こどもお絵かきアプリ</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
-            /* overflow: hidden; ← 削除またはコメントアウト */
-        }
+          body {
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+        font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+    }
 
-        .container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh; /* 画面全体を覆う */
-            max-width: 100%;
-            overflow-y: auto; /* 必要に応じて縦スクロール */
-        }
+    .container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh; /* 画面全体の高さを基準にする */
+        max-width: 100%;
+    }
 
-        .header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 5px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .header {
+        background-color: #4CAF50;
+        color: white;
+        padding: 5px;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0; /* ヘッダーの高さを固定 */
+    }
 
-        .header h1 {
-            margin: 0;
-            font-size: 18px;
-            padding: 5px 0;
-            flex-grow: 1;
-        }
+    .header h1 {
+        margin: 0;
+        font-size: 18px;
+        padding: 5px 0;
+        flex-grow: 1;
+    }
 
-        .header-button {
-            background-color: rgba(255,255,255,0.3);
-            border: none;
-            color: white;
-            border-radius: 4px;
-            padding: 4px 8px;
-            margin: 0 4px;
-            font-size: 14px;
-            cursor: pointer;
-        }
+    .header-button {
+        background-color: rgba(255,255,255,0.3);
+        border: none;
+        color: white;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin: 0 4px;
+        font-size: 14px;
+        cursor: pointer;
+    }
 
-        .canvas-container {
-            flex-grow: 1; /* 残りのスペースを埋める */
-            position: relative;
-            background-color: white;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-        }
+    .canvas-container {
+        flex-grow: 1; /* 残りのスペースを可能な限り使う */
+        position: relative;
+        background-color: white;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        overflow: hidden; /* 描画領域内はみ出しを隠す（必要に応じて） */
+    }
 
-        #drawingCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            cursor: crosshair;
-            touch-action: none; /* デフォルトのタッチ操作を無効化（描画優先） */
-        }
+    #drawingCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+        touch-action: none;
+    }
 
-        .toolbar {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-top: 1px solid #ddd;
-        }
+    .toolbar {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border-top: 1px solid #ddd;
+        flex-shrink: 0; /* ツールバーの高さを固定 */
+    }
 
         .color-button {
             width: 30px;
